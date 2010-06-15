@@ -50,6 +50,7 @@ sub entry_post_save {
     return if $r->stash('supred_already_this_session');
 
     my $app = MT->app;
+    return unless $app->isa('MT::App');
     my $q = $app->param;
     my $plugin   = MT->component('Supr');
     my $config   = $plugin->get_config_hash( 'blog:' . $entry->blog_id );
