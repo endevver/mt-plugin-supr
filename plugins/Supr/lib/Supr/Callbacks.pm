@@ -47,10 +47,10 @@ sub entry_post_save {
     my ( $cb, $entry, $entry_orig ) = @_;
     require MT::Request;
     my $r = MT::Request->instance();
-    return unless $app->isa('MT::App::CMS');
     return if $r->stash('supred_already_this_session');
 
     my $app = MT->app;
+    return unless $app->isa('MT::App::CMS');
     my $q = $app->param;
     my $plugin   = MT->component('Supr');
     my $config   = $plugin->get_config_hash( 'blog:' . $entry->blog_id );
@@ -144,9 +144,9 @@ sub edit_entry_xfrm {
     my ( $cb, $app, $tmpl ) = @_;
     my $slug;
     $slug = <<END_TMPL;
-<link rel="stylesheet" type="text/css" href="<mt:StaticWebPath>plugins/Supr/app.css" />
+<link rel="stylesheet" type="text/css" href="<mt:PluginStaticWebPath component="Supr">app.css" />
 <script type="text/javascript" src="<mt:StaticWebPath>jquery/jquery.js"></script>
-<script type="text/javascript" src="<mt:StaticWebPath>plugins/Supr/jquery.clipboard.min.js"></script>
+<script type="text/javascript" src="<mt:PluginStaticWebPath component="Supr">jquery.clipboard.min.js"></script>
 END_TMPL
     $$tmpl =~ s{(<mt:setvarblock name="html_head" append="1">)}{$1 $slug}msi;
 }
@@ -224,7 +224,7 @@ function countChars() {
 	  \$.clipboard( txt );
           return false;
 	});
-    }, { swfpath: "<mt:StaticWebPath>plugins/Supr/jquery.clipboard.swf", debug: true } );
+    }, { swfpath: "<mt:PluginStaticWebPath component="Supr">jquery.clipboard.swf", debug: true } );
 </script>
     <textarea name="su_twitter" id="su_twitter" rows="3" cols="60" $supr_dis
       onKeyDown="countChars()" onKeyUp="countChars()">$supr_text</textarea>
@@ -265,10 +265,10 @@ HTML
             ) or return $app->error('cannot create the URLs element');
         $innerHTML = "<ul>";
         $innerHTML .= '<li class="pkg"><label>URL:</label><span><a href="'.$entry->permalink.'" target="_new">'.
-            $entry->permalink.'</a></span><a class="copy" href="javascript:void(0)"><img src="<$mt:StaticWebPath$>plugins/Supr/copy.png" width="16" height="15" /></a></li>'
+            $entry->permalink.'</a></span><a class="copy" href="javascript:void(0)"><img src="<$mt:PluginStaticWebPath component="Supr"$>copy.png" width="16" height="15" /></a></li>'
             if ($entry->status == MT->model('entry')->RELEASE());
         $innerHTML .= '<li class="pkg"><label>Short URL:</label><span><a href="'.$entry->supr_url.'" target="_new">'.
-            $entry->supr_url.'</a></span><a class="copy" href="javascript:void(0)"><img src="<$mt:StaticWebPath$>plugins/Supr/copy.png" width="16" height="15" /></a></li>'
+            $entry->supr_url.'</a></span><a class="copy" href="javascript:void(0)"><img src="<$mt:PluginStaticWebPath component="Supr"$>copy.png" width="16" height="15" /></a></li>'
             if ($entry->supr_url);
         $innerHTML .= "</ul>";
         
