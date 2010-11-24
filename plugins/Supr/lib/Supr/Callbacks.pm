@@ -47,6 +47,7 @@ sub entry_post_save {
     my ( $cb, $entry, $entry_orig ) = @_;
     require MT::Request;
     my $r = MT::Request->instance();
+    return unless $app->isa('MT::App::CMS');
     return if $r->stash('supred_already_this_session');
 
     my $app = MT->app;
@@ -160,22 +161,23 @@ sub edit_entry_param {
     my $config        = $plugin->get_config_hash( 'blog:' . $blog->id );
     return if !$config->{supr_enable};
 
-    push @{$tmpl->param('field_loop')}, {
+    my $field_loop = $tmpl->param('field_loop');
+    push @$field_loop, {
         'field_id' => 'su_twitter',
         'lock_field' => 0, 
         'field_name' => 'su_twitter', 
         'show_field' => $tmpl->param("disp_prefs_show_su_twitter") ? 1 : 0, 
         'field_label' => 'Stumble Upon'
     };
-    $tmpl->param('field_loop', sort { $a->{field_label} <=> $b->{field_label}  } @{$tmpl->param('field_loop')});
-
-    my ($entry,$posted_to,$posted_on,$supr_text);
+    $tmpl->param('field_loop', sort { $a->{field_label} <=> $b->{field_label}  } @$field_loop);
+        my ($entry,$posted_to,$posted_on,$supr_text);
     my ($twitter_checked,$fb_checked);
     if ($param->{id}) {
-	$entry = MT->model('entry')->load($param->{id});
-	$posted_to = join(' and ',split(',',$entry->supr_posted_to()));
-	$posted_on = relative_date( $entry->supr_posted_on, time, $entry->blog );
-	$supr_text = $entry->supr_text();
+        # This line of code right here is breaking MT 4.3:
+        $entry = MT->model('entry')->load($param->{id});
+        $posted_to = join(' and ',split(',',$entry->supr_posted_to()));
+        $posted_on = relative_date( $entry->supr_posted_on, time, $entry->blog );
+        $supr_text = $entry->supr_text();
     }
     if ($entry && $posted_to) {
         $twitter_checked = "checked" if $entry->supr_posted_to =~ /twitter/;
@@ -185,7 +187,7 @@ sub edit_entry_param {
         $fb_checked      = "checked" if $config->{fb_default};
     }
     my $supr_dis        = ( $supr_text ne '' ? 'disabled="disabled"' : '' );
-
+  
     my $kw_field = $tmpl->getElementById('keywords')
         or return $app->error('cannot get the keywords block');
     my $su_field = $tmpl->createElement(
@@ -195,7 +197,7 @@ sub edit_entry_param {
             class => ($supr_text ne '' ? "already-posted" : "") . ($tmpl->param("disp_prefs_show_su_twitter") ? '' : ' hidden'),
             label => $app->translate('Post on Twitter & Facebook with Su.pr'),
         }
-    ) or return $app->error('cannot create the su_twitter element');
+        ) or return $app->error('cannot create the su_twitter element');
     my $postedHTML;
     if ($posted_to) {
         $postedHTML = "Posted to $posted_to " . ($posted_on =~ /ago/ ? "" : " on ") 
@@ -237,7 +239,7 @@ function countChars() {
       </div>
 HTML
     if ($posted_on) {
-	$innerHTML .= <<HTML;
+        $innerHTML .= <<HTML;
       <div class="posted pkg">
         <p>$postedHTML</p>
         <input type="hidden" name="supr_repost" value="0" />
@@ -251,30 +253,30 @@ HTML
       or return $app->error('failed to insertAfter.');
 
     if ($entry) {
-	my $title_field = $tmpl->getElementById('title')
-	    or return $app->error('cannot get the title block');
-	my $urls_field = $tmpl->createElement(
-					      'app:setting',
-					      {
-						  id    => 'urls',
-						  show_label => 0,
-						  label => $app->translate('Post URLs'),
-					      }
-					      ) or return $app->error('cannot create the URLs element');
-	$innerHTML = "<ul>";
-	$innerHTML .= '<li class="pkg"><label>URL:</label><span><a href="'.$entry->permalink.'" target="_new">'.
-	    $entry->permalink.'</a></span><a class="copy" href="javascript:void(0)"><img src="<$mt:StaticWebPath$>plugins/Supr/copy.png" width="16" height="15" /></a></li>'
-	    if ($entry->status == MT->model('entry')->RELEASE());
-	$innerHTML .= '<li class="pkg"><label>Short URL:</label><span><a href="'.$entry->supr_url.'" target="_new">'.
-	    $entry->supr_url.'</a></span><a class="copy" href="javascript:void(0)"><img src="<$mt:StaticWebPath$>plugins/Supr/copy.png" width="16" height="15" /></a></li>'
-	    if ($entry->supr_url);
-	$innerHTML .= "</ul>";
-	
-	$urls_field->innerHTML($innerHTML);
-	$tmpl->insertAfter( $urls_field, $title_field )
-	    or return $app->error('failed to insertAfter.');
+        my $title_field = $tmpl->getElementById('title')
+            or return $app->error('cannot get the title block');
+        my $urls_field = $tmpl->createElement(
+            'app:setting',
+            {
+                id    => 'urls',
+                show_label => 0,
+                label => $app->translate('Post URLs'),
+            }
+            ) or return $app->error('cannot create the URLs element');
+        $innerHTML = "<ul>";
+        $innerHTML .= '<li class="pkg"><label>URL:</label><span><a href="'.$entry->permalink.'" target="_new">'.
+            $entry->permalink.'</a></span><a class="copy" href="javascript:void(0)"><img src="<$mt:StaticWebPath$>plugins/Supr/copy.png" width="16" height="15" /></a></li>'
+            if ($entry->status == MT->model('entry')->RELEASE());
+        $innerHTML .= '<li class="pkg"><label>Short URL:</label><span><a href="'.$entry->supr_url.'" target="_new">'.
+            $entry->supr_url.'</a></span><a class="copy" href="javascript:void(0)"><img src="<$mt:StaticWebPath$>plugins/Supr/copy.png" width="16" height="15" /></a></li>'
+            if ($entry->supr_url);
+        $innerHTML .= "</ul>";
+        
+        $urls_field->innerHTML($innerHTML);
+        $tmpl->insertAfter( $urls_field, $title_field )
+            or return $app->error('failed to insertAfter.');
     }
-
+    
     $param;
 }
 
