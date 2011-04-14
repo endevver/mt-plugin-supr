@@ -51,7 +51,7 @@ sub entry_post_save {
 
     my $app = MT->app;
     return unless $app->isa('MT::App');
-    my $q = $app->param;
+    my $q = $app->can('query') ? $app->query : $app->param;
     my $plugin   = MT->component('Supr');
     my $config   = $plugin->get_config_hash( 'blog:' . $entry->blog_id );
     my $enabled  = $config->{supr_enable};
@@ -155,7 +155,7 @@ sub edit_entry_param {
     my ( $cb, $app, $param, $tmpl ) = @_;
 
     my $blog          = $app->blog;
-    my $q             = $app->param;
+    my $q             = $app->can('query') ? $app->query : $app->param;
     my $author        = $app->user;
     my $plugin        = MT->component('Supr');
     my $config        = $plugin->get_config_hash( 'blog:' . $blog->id );
